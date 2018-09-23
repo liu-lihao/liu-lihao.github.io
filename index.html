@@ -88,7 +88,7 @@
 			var map = {width: 0,height: 0};
 			map_size();
 			$(window).resize(function(){
-				setTimeout(location.reload(false),500);
+				setTimeout(history.go(0),500);
 			});
 			var coorb = {//坐标
 				//出生点
