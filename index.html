@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8">
+		<title>倒计时</title>
+		<style type="text/css">
+			#j {
+				/*background-color: #000;*/
+				width: 460px;
+				height: 210px;
+				position: fixed;
+				top: 40%;
+				left: 50%;
+				margin: -105px 0 0 -230px;
+			}
+			#header{
+				width: 460px;
+				text-align: center;
+				font-size: 40px;
+				font-weight: bolder;
+			}
+			#second {
+				position: relative;
+				left: 120px;
+			}
+			#time {
+				position: relative;
+				left: 130px;
+			}
+			#pause,#continue,#cancel{
+				position: relative;
+				left: 28px;
+			}
+			#second,#time,#pause,#continue,#cancel {
+				text-align: center;
+				width: 200px;
+				font-size: 25px;
+				padding: 10px;
+
+			}
+			#time,#pause,#continue,#cancel {
+				cursor: pointer;
+			}
+			#pause,#continue,#cancel {
+				display: none;
+			}
+			#pause{
+				color: red;
+			}
+		</style>
+		<script>
+			var daojishi,user;
+			var daojishi1=0;
+			function secondE (){
+				var seconds=document.getElementById("second").value;
+				seconds--;
+				document.getElementById("second").value=seconds;
+				if (seconds==0){
+					daojishi=clearInterval(daojishi);
+					document.getElementById("time").style.display="inline";
+					document.getElementById("pause").style.display="none";
+					document.getElementById("cancel").style.display="none";
+					document.getElementById("second").value=user;
+					document.getElementById("second").readOnly=false;
+					alert("时间到~");
+					daojishi1=0;
+				}
+			}
+			function timeE() {
+				var objExp=/^\+?[1-9][0-9]*$/;
+				var seconds=document.getElementById("second").value;
+				if (objExp.test(seconds)){
+					if(daojishi1==0){
+						user=seconds;
+						daojishi=setInterval("secondE()",1000);
+						daojishi1=1;
+						document.getElementById("second").readOnly="ture";
+						document.getElementById("time").style.display="none";
+						document.getElementById("pause").style.display="inline";
+						document.getElementById("cancel").style.display="inline";
+					}
+				}else alert("输入异常");
+			} 
+			function pauseE() {
+				daojishi=clearInterval(daojishi);
+				daojishi1=0;
+				document.getElementById("pause").style.display="none";
+				document.getElementById("continue").style.display="inline";
+			}
+			function continueE() {
+				daojishi=setInterval("secondE()",1000);
+				daojishi1=1;
+				document.getElementById("continue").style.display="none";
+				document.getElementById("pause").style.display="inline";
+			}
+			function cancelE() {
+				daojishi=clearInterval(daojishi);
+				daojishi1=0;
+				document.getElementById("second").value=user;
+				document.getElementById("second").readOnly=false;
+				document.getElementById("pause").style.display="none";
+				document.getElementById("continue").style.display="none";
+				document.getElementById("cancel").style.display="none";
+				document.getElementById("time").style.display="inline";
+			}
+		</script>
+	</head>
+	<body>
+		<div id="j">
+			<div id="header">数秒倒计时</div>
+			<br>
+			<input type="text" id="second" placeholder="请输入秒数">
+			<br><br>
+			<input type="button" value="开始倒计时" onclick="timeE()" id="time">
+			<input type="button" value="暂停" onclick="pauseE()" id="pause">
+			<input type="button" value="继续" onclick="continueE()" id="continue">
+			<input type="button" value="取消" onclick="cancelE()" id="cancel">
+		</div>
+	</body>
+</html>
