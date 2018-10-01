@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+		<title>贪吃蛇</title>
+		<style>
+			body {
+				padding: 0;
+				margin: 0;
+				background: #005500;
+			}
+			.center {
+				position :fixed;
+				top:50%;
+				left:50%;
+			}
+			#map {
+				background:url("img/snake_map.webp");
+				background-size: 100% 100%;
+				position: relative;
+			}
+			#map .scroe {
+				display:block;
+				position: relative;
+				color: rgb(0,100,0);
+				cursor: default;
+			}
+			#map .snake,#map .food {
+				width: 50px;
+				height: 50px;
+				border-radius : 25px;
+				background: rgb(9,145,34);
+				position: absolute;
+				z-index: 4;
+			}
+			#map .snake0 {
+				background: url("img/snake_header.webp");
+				background-size: 100%;
+			}
+			#map .food {
+				background: orangered;
+			}
+		</style>
+		<script src="js/jq.js" type="text/javascript" charset="utf-8"></script>
+		<script>
+			$(function(){
+				var inW = $(window).width();
+				var inH = $(window).height();
+				$("#map").css({
+					width : parseInt(inW/50)*50,
+					height : parseInt(inH/50)*50,
+					marginTop: -parseInt(inH/50)*50/2,
+					marginLeft: -parseInt(inW/50)*50/2
+				});
+				$("#map .scroe").css({
+					top: parseInt(inH/50)*50*0.38,
+					left: parseInt(inW/50)*50*0.491,
+					fontSize: inH/23
+				});
+				function Snake() {
+					var _this = this;
+					_this.map_x = Math.round($("#map").width()/50);
+					_this.map_y = Math.round($("#map").height()/50);
+					_this.score_target = $("#map .scroe");	//修改特定class元素的html记录分数。
+					_this.original = function() {	//设定初始值;
+						clearInterval(_this.timer);
+						_this.timer = null;
+						_this.body = [
+							{x:2,y:0},
+							{x:1,y:0},
+							{x:0,y:0}
+						];
+						_this.start_flag = false; 
+						_this.speed = 300;
+						_this.score_num = 3;
+						_this.direction = "right";
+						_this.direction_pre = "right";	//记录上一次移动
+						_this.gameover = "别走神，再来一波~";
+						_this.display();
+						_this.food();
+						_this.score(_this.score_num);
+					};
+					_this.score = function (num) {	//计算分数
+						if(arguments.length > 0){
+							_this.score_target.html(num);
+						}else {
+							_this.score_target.html(++_this.score_num);
+							switch (parseInt(_this.score_target.html())) {
+								case 5: _this.speed = 250;_this.upgrade("还没开始你就结束了？");break;
+								case 8: _this.speed = 200;_this.upgrade("相信自己，你可以更持久的~");break;
+								case 13: _this.speed = 150;_this.upgrade("相信自己，你可以更持久的~");break;
+								case 23: _this.speed = 100;_this.upgrade("手误了吧，继续咯");break;
+								case 40: _this.speed = 90;_this.upgrade("手误了吧，继续咯");break;
+								case 67: _this.speed = 80;_this.upgrade("手误了吧，继续咯");break;
+								case 88: _this.speed = 70;_this.upgrade("快不快？");break;
+								case 105: _this.speed = 60;_this.upgrade("蛇太长？");break;
+								case 135: _this.speed = 50;_this.upgrade("蛇太长？");break;
+								case 150: _this.speed = 50;_this.upgrade("蛇太长？");break;
+								case 155: _this.speed = 40;_this.upgrade("蛇太长？");break;
+								case 165: _this.speed = 30;_this.upgrade("蛇太长？");break;
+							};
+						}
+					};
+					_this.upgrade = function (content) {	//提升难度(提高speed)，以及更新gameover提示语。
+						_this.gameover = content;
+						clearInterval(_this.timer);
+						_this.timer = setInterval(function(){_this.run()},_this.speed);
+					};
+					_this.display = function() {		//根据_this.body创建蛇。
+						$("#map .snake").remove();
+						for(var i=0;i<_this.body.length;i++){	
+							if(_this.body[i].x != null) {
+								var node = "<div class='snake snake" + i +"'><div>";
+								$(node).appendTo($("#map"));
+								$("#map .snake" + i).css({
+									top: _this.body[i].y * 50,
+									left: _this.body[i].x * 50,
+								});
+							}
+						};
+					};
+					_this.food = function () {	//随机生成食物
+						$("<div class='food'><div>").appendTo($("#map"));
+						_this.foodx = Math.floor(Math.random()*_this.map_x);
+						_this.foody = Math.floor(Math.random()*_this.map_y);
+						for (var i=0;i<_this.body.length;i++){
+							if(  (_this.foodx == _this.body[i].x) && (_this.foody == _this.body[i].y) && (_this.body.length < _this.map_x*_this.map_y-1) ) {
+								return arguments.callee();
+							}
+						}
+						$("#map .food").css({
+							top: _this.foody * 50,
+							left: _this.foodx * 50
+						});
+					};
+					_this.run = function () {	//运动，每次运动都是修改坐标再重新生成蛇。
+						for(var i=_this.body.length-1;i>0;i--){	//蛇的上一节身体到下一节身体的位置（蛇头另外处理）。
+							_this.body[i].x = _this.body[i-1].x;
+							_this.body[i].y = _this.body[i-1].y;
+						};
+						switch(_this.direction) {	//蛇头移动
+							case "right": _this.body[0].x +=1;break;
+							case "left" : _this.body[0].x -=1;break;
+							case "up": _this.body[0].y -=1;break;
+							case "down" : _this.body[0].y +=1;break;
+						};
+						_this.direction_pre = _this.direction;	// direction_pre记录 每次头部根据snake.direction运动方向。
+						//出界
+						if(_this.body[0].x > _this.map_x-1 || _this.body[0].x < 0 || _this.body[0].y > _this.map_y-1 || _this.body[0].y < 0 ){
+							alert("游戏结束1，您获得" +_this.score_num+"分，\n"+_this.gameover);
+							_this.original();
+						}
+						//吃到自己 
+						for (var j=4;j<_this.body.length;j++){
+							if(  (_this.body[0].x == _this.body[j].x) && (_this.body[0].y == _this.body[j].y)  ) {
+								alert("游戏结束2，您获得" +_this.score_num+"分，\n"+_this.gameover);
+								_this.original();
+							}
+						}
+						//吃到食物
+						if(_this.body[0].x == _this.foodx && _this.body[0].y == _this.foody){
+							_this.body.push({x:null,y:null});
+							$("#map .food").remove();
+							_this.food();
+							_this.score();
+						}
+						_this.display();
+					};
+					_this.snake_dir = function(dir){	//判定方向
+						if(_this.start_flag){
+							switch (dir) {		//按键方向与上次一蛇头运动方向对比（不能与本身的对比，不然按得快就gg）。
+								case "left" : 
+									if(_this.direction_pre != "right"){
+										_this.direction = "left";
+									};break;
+								case "up" : 
+									if(_this.direction_pre != "down"){
+										_this.direction = "up";
+									};break;
+								case "right" : 
+									if(_this.direction_pre != "left"){
+										_this.direction = "right";
+									};break;
+								case "down" : 
+									if(_this.direction_pre != "up"){
+										_this.direction = "down";
+									};break;
+							};
+						};
+					};
+					_this.startOrpause = function(){	//开始或暂停
+						if(!_this.start_flag){
+							_this.start_flag = true;
+							_this.timer = setInterval(function(){_this.run()},_this.speed);
+						}else {
+							_this.start_flag = false;
+							clearInterval(_this.timer);
+						}
+					};
+				};
+				var snake = new Snake();
+				snake.original();
+				$(document).keydown(function(e){
+					switch (e.keyCode) {
+						case 37 : 
+							snake.snake_dir("left");break;
+						case 38 : 
+							snake.snake_dir("up");break;
+						case 39 : 
+							snake.snake_dir("right");break;
+						case 40 : 
+							snake.snake_dir("down");break;
+						case 32 :
+							snake.startOrpause();break;
+					};
+				}).click(function(e){
+					if(tow_points({x:inW/2,y:inH/2},{x:e.clientX,y:e.clientY},"s")>inW*0.085){//不是中间
+						snake.snake_dir(tow_points({x:inW/2,y:inH/2},{x:e.clientX,y:e.clientY}));
+					}else {	//中间
+						snake.startOrpause();
+					}
+				});
+				function tow_points(start,end) {	//计算{x:_,y:_}两点的方向或距离
+					if(arguments.length > 2){
+						return Math.sqrt(Math.pow(start.y - end.y,2) + Math.pow(start.x - end.x,2),2)
+					}
+					var k = (start.y-end.y)/(start.x-end.x);
+					if(k>1 || k<-1){
+						if( end.y - start.y > 0) {return "down"}else 
+						if( end.y - start.y < 0) {return "up"};
+					}else if(k<1 && k>-1) {
+						if( end.x - start.x > 0) {return "right"}else 
+						if( end.x - start.x < 0) {return "left"};
+					}
+				};
+			});
+		</script>
+	</head>
+	<body>
+		<div class="center">
+			<div id="map">
+				<span class="scroe"></span>
+			</div>
+		</div>
+	</body>
+</html>

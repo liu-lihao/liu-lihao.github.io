@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>湖光镇</title>
+		<link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+		<style type="text/css">
+			body {
+				padding: 0;
+				margin: 0;
+			}
+		</style>
+		<script src="js/jq.js"></script>
+		<script>
+			/*
+			 * 左上: 110°15'00"  21°10'00"
+			 * 右下: 110°18'45"  21°07'30"
+			 * width:100% → 经度225"
+			 * height:100% → 纬度150" 
+			 */
+			$(function(){
+				$("#map img").click(function(event){
+					var top_allfen = (event.offsetY / $(this).height() * 150);
+					var top_fen = Math.round(top_allfen % 60);
+					var top_miao = parseInt(top_allfen /60);
+					var lase_N = "21°" + (10- ( (top_fen==0)?top_miao:(top_miao+1) ) ) + "\'" + (  60- (top_fen==0 ? 60 : top_fen )  ) + "\"";
+					
+					var left_allfen = (event.offsetX / $(this).width() * 225);
+					var left_fen = Math.round(left_allfen % 60);
+					var left_miao = parseInt(left_allfen /60);
+					var last_E = "100°" + (15+left_miao) + "\'" + left_fen + "\"";
+					alert(
+						"您选中的地点为\n东经：" + last_E +"\n北纬："+lase_N
+					);
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<div id="map"><img src="img/huguang_map.webp"/></div>
+	</body>
+</html>
