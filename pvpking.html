@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+	<meta charset="utf-8">
+	<link href="img/favicon.ico">
+	<title>王者荣耀兵线</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			overflow : hidden;
+		}
+		#map {
+			position : fixed;
+			top : 50%;
+			left : 50%;
+			margin : -304px 0 0 -385px;
+		}
+		#map .map {
+			position : relative;
+		}
+		#map .blue,#map .red{
+			display: block;
+			width: 16px;
+			height: 16px;
+			border-radius: 8px;
+			background: blue;
+			margin: -8px 0 0 -8px;
+			position : absolute;
+		}
+		#map .red {
+			background: red;
+		}
+		#map .count_num {
+			text-shadow:2px 2px 5px #C2C2C2;
+		}
+		#map .count_num_blue {
+			position : absolute;
+			top: 490px;
+			left : 215px;
+		}
+		#map .count_num_red {
+			position : absolute;
+			top: 95px;
+			left : 530px;
+		}
+		#start {
+			position : fixed;
+			top : 50%;
+			left : 50%;
+			z-index : 98;
+			background-color : rgba(0,0,0,0.5);
+		}
+		#start .start_button {
+			width: 120px;
+			height: 120px;
+			position: fixed;
+			top:50%;
+			left: 50%;
+			z-index : 99;
+			color: #fff;
+			cursor : pointer;
+			margin: -60px 0 0 -60px;
+		}
+		#start span input {
+			width: 30px;
+			height: 30px;
+			display: block;
+			margin: -15px 0 0 -15px;
+			position : absolute;
+			cursor: pointer;
+		}
+		#start span input:checked {
+			width: 40px;
+			height: 40px;
+			margin: -20px 0 0 -20px;
+		}
+	</style>
+	<script src="js/jq.js"></script>
+	<script>
+		$(function(){
+
+			//调试速度
+			var multiple = 1;	//默认为1倍速度
+			//地图大小
+			var map = {width: 0,height: 0};
+			map_size();
+			//坐标计算
+			var coorb = {//坐标比例%
+				//出生点
+				blue : {top: 0.8259 , left: 0.2416},
+				red : {top: 0.1741 , left: 0.7584},
+				//上路转折点
+				up1 : {top : 0.7011 , left : 0.1909},
+				up2 : {top : 0.2217 , left : 0.1948},
+				up3 : {top : 0.1018 , left : 0.2805},
+				up4 : {top : 0.0969 , left : 0.6727},
+				//下路转折点
+				down1 : {top : 0.8933 , left : 0.3403},
+				down2 : {top : 0.8883 , left : 0.726},
+				down3 : {top : 0.7849 , left : 0.8143},
+				down4 : {top : 0.2841 , left : 0.8182},
+				//倒计时
+				count_num_blue : {top: 0.8046,left: 0.2792},
+				count_num_red : {top: 0.1398,left: 0.6623},
+				//蓝方防御塔
+				line_1 : {top: 0.9003,left: 0.3304},
+				line_2 : {top: 0.9127,left: 0.4498},
+				line_3 : {top: 0.9127,left: 0.6544},
+			};
+			coorb_compute();//将比例计算成px
+			//兵线数据
+			var speed = Math.sqrt(Math.pow(coorb.blue.top - coorb.red.top,2) + Math.pow(coorb.blue.left - coorb.red.left,2),2)/36*multiple;//小兵36s到对方出生，算出速度，单位(px/s)。
+			var time_lag = 33.28*1000/multiple;//小兵每33.28s出生
+			var count = {num:0,gap:230};//倒计时
+
+			//初始化
+			$(".blue").css(coorb.blue).css("opacity",0);
+			$(".red").css(coorb.red).css("opacity",0);
+			$("#line_0").css(coorb.blue);
+			$("#line_1").css(coorb.line_1);
+			$("#line_2").css(coorb.line_2);
+			$("#line_3").css(coorb.line_3);
+			$(".count_num_blue").css(coorb.count_num_blue);
+			$(".count_num_red").css(coorb.count_num_red);
+			$(".start_button").hover(function(){
+				this.src = "img/pvpking_start_active.webp";
+			},function(){
+				this.src = "img/pvpking_start.webp";
+			});
+			$(window).resize(function(){
+				setTimeout(location.reload(false),500);
+			});
+			//执行
+			$(".start_button").click(function(){
+				var start_dalay = 0;
+				var weizhi = $("input[name=weizhi]");
+				for( var i=0;i<weizhi.length;i++){
+					if(weizhi.get(i).checked == true){
+						start_dalay = Math.round(weizhi.get(i).value/multiple*10000)/10000;
+					}
+				}
+				setTimeout(function(){
+					$(".blue").css("opacity",1);
+					$(".red").css("opacity",1);
+					count.num = time_lag/1000;
+					start("up");
+					start("center");
+					start("down");
+				},start_dalay*1000);
+				$("#start").fadeOut();
+				count.num = start_dalay;
+				setInterval(function(){count_num()},count.gap);
+			});
+			//计算
+			function map_size(){
+				var winnerW = $(window).width();
+				var winnerH = $(window).height();
+				$(".bg").css("width",winnerW).css("height",winnerH);
+				if(winnerW > winnerH){
+					map.width = winnerH*(770/609);
+					map.height = winnerH;
+					map_set_size();
+				}else {
+					map.width = winnerW;
+					map.height = winnerW*(609/770);
+					map_set_size();
+				}
+			};
+			function coorb_compute(){
+				for ( var i in coorb) {
+					coorb[i].top = coorb[i].top*map.height;
+					coorb[i].left = coorb[i].left*map.width;
+				}
+			};
+			function map_set_size() {
+				$("#map").css({
+					marginTop : -map.height/2,
+					marginLeft : -map.width/2,
+				});
+				$("#map .map").css({
+					width : map.width,
+					height : map.height,
+				});
+				$("#start").css({
+					width : map.width,
+					height : map.height,
+					marginTop : -map.height/2,
+					marginLeft : -map.width/2,
+				});
+			};
+			function count_num(){//倒计时
+				$(".count_num").html(count.num + "s");
+				count.num = Math.round(count.num*1000 - count.gap) /1000;
+			};
+			function timeE(a,b){//通过 距离 和 小兵的移速 计算所需的时间，单位(ms)。
+				return Math.sqrt(Math.pow(a.top - b.top,2) + Math.pow(a.left - b.left,2),2)/(speed/1000);
+			};
+			//动画
+			function start(direction) {//设置循环
+				var num = 0;
+				switch (direction) {
+					case "up" : num=4;break;
+					case "center" : num=2;break;
+					case "down" : num=6;break;
+				};
+				blueRedE(num);
+				setInterval(function(){blueRedE(num-1)},time_lag);
+				setTimeout(function(){setInterval(function(){blueRedE(num)},time_lag);},time_lag);
+			};
+			function blueRedE(num){//动画1
+				map_move(num,"blue");
+				map_move(num,"red");
+			};
+			function map_move(num,color){//动画2
+				var line = [];
+				if(num <= 2) {
+					if(color == "red"){ line = [coorb.red,coorb.blue] }else{ line = [coorb.blue,coorb.red]; if(num == 1 ){count.num = time_lag/1000;}};
+					$("." + color + num).animate(line[1],timeE(line[0],line[1]),"linear").queue(function(){
+						$("." + color + num).css(line[0]).stop(true,true);
+					});
+				}else {
+					if(color == "blue" && (num ==3 || num == 4) ){ line = [coorb.blue,coorb.up1,coorb.up2,coorb.up3,coorb.up4,coorb.red] } else
+					if(color == "red" && (num ==3 || num == 4) ){ line = [coorb.red,coorb.up4,coorb.up3,coorb.up2,coorb.up1,coorb.blue] } else
+					if(color == "blue" && (num ==5 || num == 6) ){ line = [coorb.blue,coorb.down1,coorb.down2,coorb.down3,coorb.down4,coorb.red] } else
+					if(color == "red" && (num ==5 || num == 6) ){ line = [coorb.red,coorb.down4,coorb.down3,coorb.down2,coorb.down1,coorb.blue] };
+					$("." + color + num).animate(line[1],timeE(line[0],line[1]),"linear")
+										.animate(line[2],timeE(line[1],line[2]),"linear")
+										.animate(line[3],timeE(line[2],line[3]),"linear")
+										.animate(line[4],timeE(line[3],line[4]),"linear")
+										.animate(line[5],timeE(line[4],line[5]),"linear")
+										.queue(function(){
+											$("." + color + num).css(line[0]).stop(true,true);
+										});
+					};
+			};
+
+		});
+	</script>
+</head>
+<body>
+	<div id="bg"><img src="img/pvpking_bg.webp" alt="bg" class="bg"></div>
+	<div id="map">
+		<img src="img/pvpking_map.webp" alt="map" class="map">
+		<!-- 中 -->
+		<span class="blue blue1"></span>
+		<span class="blue blue2"></span>
+		<span class="red red1"></span>
+		<span class="red red2"></span>
+		<!-- 上 -->
+		<span class="blue blue3"></span>
+		<span class="blue blue4"></span>
+		<span class="red red3"></span>
+		<span class="red red4"></span>
+		<!-- 下 -->
+		<span class="blue blue5"></span>
+		<span class="blue blue6"></span>
+		<span class="red red5"></span>
+		<span class="red red6"></span>
+		<!-- 倒计时 -->
+		<div class="count_num count_num_blue"></div>
+		<div class="count_num count_num_red"></div>
+	</div>
+	<div style="width:99999px;height:99999px;background:rgba(0,0,0,0);position:fixed;top:0;left:0"></div>
+	<div id="start">
+		<span>
+			<input name="weizhi" type="radio" id="line_0" value="0" checked><br>
+			<input name="weizhi" type="radio" id="line_1" value="28.45"><br>
+			<input name="weizhi" type="radio" id="line_2" value="22.24"><br>
+			<input name="weizhi" type="radio" id="line_3" value="12.12"><br>
+		</span>	
+		<img class="start_button" src="pvpking_start.webp" alt="">
+	</div>
+</body>
+</html>
