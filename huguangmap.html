@@ -8,6 +8,40 @@
 		body {
 			padding: 0;
 			margin: 0;
+			position: relative;
+		}
+		#map {
+			width:3251px;height:2316px;
+		}
+		#coords {
+			display: none;
+			position: absolute;
+			width: 188px;
+			height: 52px;
+			background-image: url(img/bg_toumingmosha.png);
+			text-align: center;
+			padding: 14px;
+			font-size: 19px;
+			text-shadow:2px 1px 4px #FFFFFF;
+		}
+		#cursor {
+			display: none;
+			position: absolute;
+		}
+		.btn {
+			width: 264px;
+			height: 108px;
+			background-size: 264px 216px;
+			background-image: url(img/map_btn.png);
+			background-position: 0 0;
+			position: absolute;
+			top: 954px;
+			left: 1363px;
+			cursor : pointer;
+		}
+		.btn2 {
+			display:none;
+			background-position: 0 100%;
 		}
 	</style>
 	<script src="js/jq.js"></script>
@@ -19,24 +53,91 @@
 		 * height:100% → 纬度150" 
 		 */
 		$(function(){
-			$("#map img").click(function(event){
-				var top_allfen = (event.offsetY / $(this).height() * 150);
-				var top_fen = Math.round(top_allfen % 60);
-				var top_miao = parseInt(top_allfen /60);
-				var lase_N = "21°" + (10- ( (top_fen==0)?top_miao:(top_miao+1) ) ) + "\'" + (  60- (top_fen==0 ? 60 : top_fen )  ) + "\"";
+			function units_add_zero(num){	//对齐2位数，将0-9 前面加上0，变成00,01,02...09
+				return (Math.round(num).toString().length == 1) ? ("0" + Math.round(num)) : Math.round(num);
+			}
+			$("#map").click(function(event){
+				var click_top = event.offsetY;
+				var click_left = event.offsetX;
+
+				var top_allmiao = (click_top / $(this).height() * 150);
+				var top_miao = Math.round(top_allmiao % 60);
+				var top_fen = parseInt(top_allmiao /60);
+				var last_N = "21°" + units_add_zero(10- ( (top_miao==0)?top_fen:(top_fen+1) ) ) + "\'" + units_add_zero(  60- (top_miao==0 ? 60 : top_miao )  ) + "\"";
 				
-				var left_allfen = (event.offsetX / $(this).width() * 225);
-				var left_fen = Math.round(left_allfen % 60);
-				var left_miao = parseInt(left_allfen /60);
-				var last_E = "100°" + (15+left_miao) + "\'" + left_fen + "\"";
-				alert(
-					"您选中的地点为\n东经：" + last_E +"\n北纬："+lase_N
-				);
+				var left_allmiao = (click_left / $(this).width() * 225);
+				var left_miao = Math.round(left_allmiao % 60);
+				var left_fen = parseInt(left_allmiao /60);
+				var last_E = "100°" + units_add_zero(15+left_fen) + "\'" + units_add_zero(left_miao) + "\"";
+
+				$("#coords span").eq(0).html("东经："+last_E);
+				$("#coords span").eq(1).html("北纬："+ "&nbsp;&nbsp;" + last_N);
+
+				// 设置指针#cursor
+				var cursor_tsf = "";
+				var cursor_top = 0;
+				var cursor_left = 0;
+				if(click_top-40 >= 0){
+					cursor_tsf = "rotate(0deg)";
+					cursor_top = click_top-40;
+					cursor_left = click_left-15;
+				}else {
+					cursor_tsf = "rotate(180deg)";
+					cursor_top = click_top;
+					cursor_left = click_left-15;
+				};
+				$("#cursor").css({
+					display : "none",
+					transform : cursor_tsf,
+					top : cursor_top,
+					left : cursor_left
+				}).fadeIn();
+				// 设置坐标信息#coords
+				var coords_top = 0;
+				var coords_left = 0;
+				if(click_top + 80 > $(this).height()){
+					coords_top = click_top - 80;
+					console.log("top超过啦");
+				}else { coords_top = click_top; };
+				if(click_left + 216 > $(this).width()){
+					coords_left = click_left - 216;
+					console.log("left超过啦");
+				}else { coords_left = click_left; };
+				$("#coords").css({
+					display : "none",
+					top : coords_top,
+					left : coords_left
+				}).fadeIn();
+			});
+			$("#coords,#cursor").click(function(){
+				$("#coords").fadeOut();
+				$("#cursor").fadeOut();
+			});
+			$(".btn1").click(function(){
+				$(".btn1").hide();
+				$(".btn2").show();
+				$("#map img").eq(1).show();
+				$("#map img").eq(0).hide();
+			});
+			$(".btn2").click(function(){
+				$(".btn1").show();
+				$(".btn2").hide();
+				$("#map img").eq(0).show();
+				$("#map img").eq(1).hide();
 			});
 		});
 	</script>
 </head>
-<body>
-	<div id="map"><img src="img/huguang_map.webp"/></div>
+<body onselectstart="return false">
+	<div id="map">
+		<img src="img/huguang_map.webp"/>
+		<img src="img/huguang_wxmap.webp" alt="" style="min-width:3251px;min-height:2316px;display:none">
+	</div>
+	<div id="coords"><span>经度: 110°15'00"</span><br><span>纬度: 110°18'45"</span></div>
+	<div id="cursor">
+		<img src="img/map_cursor.png" alt="" style="max-width:30px;max-height:40px;">
+	</div>
+	<div class="btn btn1"></div>
+	<div class="btn btn2"></div>
 </body>
 </html>
