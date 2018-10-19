@@ -14,11 +14,12 @@
 		.center {
 			position :fixed;
 			top:50%;
-			left:50%;
+			left:38%;
 		}
 		#map {
-			background:url("img/snake_map.webp");
-			background-size: 100% 100%;
+			/*background:url("img/snake_map.webp");*/
+			background: #1A3500;
+			background-size:100%;
 			position: relative;
 		}
 		#map .scroe {
@@ -28,9 +29,6 @@
 			cursor: default;
 		}
 		#map .snake,#map .food {
-			width: 50px;
-			height: 50px;
-			border-radius : 25px;
 			background: rgb(9,145,34);
 			position: absolute;
 			z-index: 4;
@@ -42,27 +40,48 @@
 		#map .food {
 			background: orangered;
 		}
+		.right {
+			position: fixed;
+			top : 50%;
+			left: 88%;
+		}
+		#roulette {
+			background: url("img/snake_roulette.png");
+			background-size: 100%;
+		}
 	</style>
 	<script src="js/jq.js" type="text/javascript" charset="utf-8"></script>
 	<script>
 		$(function(){
+			// var xx = 3;
+			// for (xx=3;xx<100;xx +=2){
+			// 	var yy =472.78*1/ Math.pow(xx,0.516);
+			// 	console.log(xx,yy);
+			// }
 			var inW = $(window).width();
 			var inH = $(window).height();
+			var grid = parseInt(inW*0.76/30);
 			$("#map").css({
-				width : parseInt(inW/50)*50,
-				height : parseInt(inH/50)*50,
-				marginTop: -parseInt(inH/50)*50/2,
-				marginLeft: -parseInt(inW/50)*50/2
+				width : parseInt(inW/grid*0.76)*grid,
+				height : parseInt(inW/grid*0.76*0.67)*grid,
+				marginTop: -parseInt(inW/grid*0.76*0.67)*grid/2,
+				marginLeft: -parseInt(inW/grid*0.76)*grid/2
 			});
 			$("#map .scroe").css({
-				top: parseInt(inH/50)*50*0.38,
-				left: parseInt(inW/50)*50*0.491,
+				top: parseInt(inH/grid)*grid*0.38,
+				left: parseInt(inW/grid*0.76)*grid*0.491,
 				fontSize: inH/23
+			});
+			$("#roulette").css({
+				width: parseInt(inW*0.22),
+				height: parseInt(inW*0.22),
+				marginTop: - parseInt(inW*0.22)/2,
+				marginLeft: - parseInt(inW*0.22)/2,
 			});
 			function Snake() {
 				var _this = this;
-				_this.map_x = Math.round($("#map").width()/50);
-				_this.map_y = Math.round($("#map").height()/50);
+				_this.map_x = Math.round($("#map").width()/grid);
+				_this.map_y = Math.round($("#map").height()/grid);
 				_this.score_target = $("#map .scroe");	//修改特定class元素的html记录分数。
 				_this.original = function() {	//设定初始值;
 					clearInterval(_this.timer);
@@ -87,19 +106,19 @@
 						_this.score_target.html(num);
 					}else {
 						_this.score_target.html(++_this.score_num);
+						_this.speed = Math.round(472.78*1/ Math.pow(parseInt(_this.score_target.html()),0.516));//蛇的
 						switch (parseInt(_this.score_target.html())) {
-							case 5: _this.speed = 250;_this.upgrade("还没开始你就结束了？");break;
-							case 8: _this.speed = 200;_this.upgrade("相信自己，你可以更持久的~");break;
-							case 13: _this.speed = 150;_this.upgrade("相信自己，你可以更持久的~");break;
-							case 23: _this.speed = 100;_this.upgrade("手误了吧，继续咯");break;
-							case 40: _this.speed = 90;_this.upgrade("手误了吧，继续咯");break;
-							case 67: _this.speed = 80;_this.upgrade("手误了吧，继续咯");break;
-							case 88: _this.speed = 70;_this.upgrade("快不快？");break;
-							case 105: _this.speed = 60;_this.upgrade("蛇太长？");break;
-							case 135: _this.speed = 50;_this.upgrade("蛇太长？");break;
-							case 150: _this.speed = 50;_this.upgrade("蛇太长？");break;
-							case 155: _this.speed = 40;_this.upgrade("蛇太长？");break;
-							case 165: _this.speed = 30;_this.upgrade("蛇太长？");break;
+							case 5: _this.upgrade("还没开始你就结束了？");break;
+							case 8: _this.upgrade("相信自己，你可以更持久的~");break;
+							case 13: _this.upgrade("相信自己，你可以更持久的~");break;
+							case 40: _this.upgrade("定个小目标，先及格(60)！");break;
+							case 60: _this.upgrade("加油~~~~你已经很牛x了！");break;
+							case 80: _this.upgrade("还是人吗？？？");break;
+							case 100: _this.upgrade("强无敌，突破人类极限！");break;
+							case 135: _this.upgrade("快不快？");break;
+							case 150: _this.upgrade("蛇太长？");break;
+							case 155: _this.upgrade("蛇太长？");break;
+							case 165: _this.upgrade("蛇太长？");break;
 						};
 					}
 				};
@@ -115,11 +134,16 @@
 							var node = "<div class='snake snake" + i +"'><div>";
 							$(node).appendTo($("#map"));
 							$("#map .snake" + i).css({
-								top: _this.body[i].y * 50,
-								left: _this.body[i].x * 50,
+								top: _this.body[i].y * grid,
+								left: _this.body[i].x * grid,
 							});
 						}
 					};
+					$("#map .snake,#map .food").css({
+							width: grid,
+							height: grid,
+							"border-radius" : grid/2,
+					});
 				};
 				_this.food = function () {	//随机生成食物
 					$("<div class='food'><div>").appendTo($("#map"));
@@ -131,8 +155,8 @@
 						}
 					}
 					$("#map .food").css({
-						top: _this.foody * 50,
-						left: _this.foodx * 50
+						top: _this.foody * grid,
+						left: _this.foodx * grid
 					});
 				};
 				_this.run = function () {	//运动，每次运动都是修改坐标再重新生成蛇。
@@ -147,6 +171,7 @@
 						case "down" : _this.body[0].y +=1;break;
 					};
 					_this.direction_pre = _this.direction;	// direction_pre记录 每次头部根据snake.direction运动方向。
+
 					//出界
 					if(_this.body[0].x > _this.map_x-1 || _this.body[0].x < 0 || _this.body[0].y > _this.map_y-1 || _this.body[0].y < 0 ){
 						alert("游戏结束1，您获得" +_this.score_num+"分，\n"+_this.gameover);
@@ -216,8 +241,8 @@
 						snake.startOrpause();break;
 				};
 			}).click(function(e){
-				if(tow_points({x:inW/2,y:inH/2},{x:e.clientX,y:e.clientY},"s")>inW*0.085){//不是中间
-					snake.snake_dir(tow_points({x:inW/2,y:inH/2},{x:e.clientX,y:e.clientY}));
+				if(tow_points({x:inW*0.88,y:inH*0.5},{x:e.clientX,y:e.clientY},"s")<parseInt(inW*0.23)/2){//不是中间
+					snake.snake_dir(tow_points({x:inW*0.88,y:inH*0.5},{x:e.clientX,y:e.clientY}));
 				}else {	//中间
 					snake.startOrpause();
 				}
@@ -243,6 +268,9 @@
 		<div id="map">
 			<span class="scroe"></span>
 		</div>
+	</div>
+	<div class="right">
+		<div id="roulette"></div>
 	</div>
 </body>
 </html>
