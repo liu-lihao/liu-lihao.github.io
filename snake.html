@@ -2,7 +2,7 @@
 <html lang="zh-cn">
 <head>
 	<meta charset="utf-8">
-	<!-- <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 	<link href="img/favicon.ico">
 	<title>贪吃蛇</title>
 	<style>
@@ -241,9 +241,9 @@
 						snake.startOrpause();break;
 				};
 			}).click(function(e){
-				if(tow_points({x:inW*0.88,y:inH*0.5},{x:e.clientX,y:e.clientY},"s")<parseInt(inW*0.23)/2){//不是中间
+				if(tow_points({x:inW*0.88,y:inH*0.5},{x:e.clientX,y:e.clientY},"s")<parseInt(inW*0.30)/2){//轮盘
 					snake.snake_dir(tow_points({x:inW*0.88,y:inH*0.5},{x:e.clientX,y:e.clientY}));
-				}else {	//中间
+				}else {	//外边
 					snake.startOrpause();
 				}
 			});
