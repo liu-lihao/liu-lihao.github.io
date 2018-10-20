@@ -11,22 +11,26 @@
 			margin: 0;
 			background: #005500;
 		}
-		.center {
+		.center,.right {
 			position :fixed;
-			top:50%;
-			left:38%;
 		}
 		#map {
-			/*background:url("img/snake_map.webp");*/
 			background: #1A3500;
 			background-size:100%;
 			position: relative;
 		}
 		#map .scroe {
 			display:block;
-			position: relative;
+			height:100px;
+			width: 200px;
+			position: absolute;
+			top: 50%;
+			left : 50%;
+			margin: -50px 0 0 -100px;
 			color: rgb(0,100,0);
 			cursor: default;
+			text-align:center;
+			line-height:100px;
 		}
 		#map .snake,#map .food {
 			background: rgb(9,145,34);
@@ -40,11 +44,6 @@
 		#map .food {
 			background: orangered;
 		}
-		.right {
-			position: fixed;
-			top : 50%;
-			left: 88%;
-		}
 		#roulette {
 			background: url("img/snake_roulette.png");
 			background-size: 100%;
@@ -53,48 +52,67 @@
 	<script src="js/jq.js" type="text/javascript" charset="utf-8"></script>
 	<script>
 		$(function(){
-			// var xx = 3;
-			// for (xx=3;xx<100;xx +=2){
-			// 	var yy =472.78*1/ Math.pow(xx,0.516);
-			// 	console.log(xx,yy);
-			// }
-			var inW = $(window).width();
-			var inH = $(window).height();
-			var grid = parseInt(inW*0.76/30);
-			$("#map").css({
-				width : parseInt(inW/grid*0.76)*grid,
-				height : parseInt(inW/grid*0.76*0.67)*grid,
-				marginTop: -parseInt(inW/grid*0.76*0.67)*grid/2,
-				marginLeft: -parseInt(inW/grid*0.76)*grid/2
-			});
-			$("#map .scroe").css({
-				top: parseInt(inH/grid)*grid*0.38,
-				left: parseInt(inW/grid*0.76)*grid*0.491,
-				fontSize: inH/23
-			});
-			$("#roulette").css({
-				width: parseInt(inW*0.22),
-				height: parseInt(inW*0.22),
-				marginTop: - parseInt(inW*0.22)/2,
-				marginLeft: - parseInt(inW*0.22)/2,
-			});
 			function Snake() {
 				var _this = this;
-				_this.map_x = Math.round($("#map").width()/grid);
-				_this.map_y = Math.round($("#map").height()/grid);
+				_this.style_copy = $("style").html();
+				_this.shuping_flag = false; //是否竖屏，竖屏的话，将内容横向。
+				_this.inW,_this.inH,_this.grid = 0;
 				_this.score_target = $("#map .scroe");	//修改特定class元素的html记录分数。
+				_this.snake_init = function(){	//地图、轮盘、蛇重新初始化
+					_this.inW = $(window).width();
+					_this.inH = $(window).height();
+					if(_this.inW<_this.inH){_this.shuping_flag = true;}else{_this.shuping_flag = false;}
+					_this.grid = _this.shuping_flag ? parseInt(_this.inH*0.76/30) : parseInt(_this.inW*0.76/30);
+					$("style").html( _this.style_copy + "#map .snake,#map .food{width: " + _this.grid + "px;height: " + _this.grid +"px;border-radius : " +_this.grid/2+ "px}");
+					$("#map").css({
+						width : _this.shuping_flag ? parseInt(_this.inH/_this.grid*0.76*0.67)*_this.grid: parseInt(_this.inW/_this.grid*0.76)*_this.grid,
+						height : _this.shuping_flag ? parseInt(_this.inH/_this.grid*0.76)*_this.grid: parseInt(_this.inW/_this.grid*0.76*0.67)*_this.grid,
+						marginTop: _this.shuping_flag ? -parseInt(_this.inH/_this.grid*0.76)*_this.grid/2: -parseInt(_this.inW/_this.grid*0.76*0.67)*_this.grid/2,
+						marginLeft: _this.shuping_flag ? -parseInt(_this.inH/_this.grid*0.76*0.67)*_this.grid/2: -parseInt(_this.inW/_this.grid*0.76)*_this.grid/2
+					});
+					$("#map .scroe").css({
+						fontSize: _this.shuping_flag ? _this.inW/23: _this.inH/23,
+						transform: _this.shuping_flag ? "rotate(90deg)": ""
+					});
+					$("#roulette").css({
+						width: _this.shuping_flag ? parseInt(_this.inH*0.22): parseInt(_this.inW*0.22),
+						height: _this.shuping_flag ? parseInt(_this.inH*0.22): parseInt(_this.inW*0.22),
+						marginTop: _this.shuping_flag ? - parseInt(_this.inH*0.22)/2: - parseInt(_this.inW*0.22)/2,
+						marginLeft: _this.shuping_flag ? - parseInt(_this.inH*0.22)/2: - parseInt(_this.inW*0.22)/2,
+					});
+					$(".center").css({
+						left : _this.shuping_flag ? "50%": "38%",
+						top : _this.shuping_flag ? "38%": "50%"
+					});
+					$(".right").css({
+						left : _this.shuping_flag ? "50%": "88%",
+						top : _this.shuping_flag ? "88%": "50%"
+					});
+					_this.original();
+				};
+				_this.map_x = function(){return Math.round($("#map").width()/_this.grid)};
+				_this.map_y = function(){return Math.round($("#map").height()/_this.grid)};
 				_this.original = function() {	//设定初始值;
 					clearInterval(_this.timer);
 					_this.timer = null;
-					_this.body = [
-						{x:2,y:0},
-						{x:1,y:0},
-						{x:0,y:0}
-					];
+					if(_this.shuping_flag){
+						_this.body = [
+							{x:19,y:2},
+							{x:19,y:1},
+							{x:19,y:0}
+						];
+						_this.direction = "down";
+					}else{
+						_this.body = [
+							{x:2,y:0},
+							{x:1,y:0},
+							{x:0,y:0}
+						];
+						_this.direction = "right";
+					}
 					_this.start_flag = false; 
 					_this.speed = 300;
 					_this.score_num = 3;
-					_this.direction = "right";
 					_this.direction_pre = "right";	//记录上一次移动
 					_this.gameover = "别走神，再来一波~";
 					_this.display();
@@ -134,29 +152,25 @@
 							var node = "<div class='snake snake" + i +"'><div>";
 							$(node).appendTo($("#map"));
 							$("#map .snake" + i).css({
-								top: _this.body[i].y * grid,
-								left: _this.body[i].x * grid,
+								top: _this.body[i].y * _this.grid,
+								left: _this.body[i].x * _this.grid,
 							});
 						}
 					};
-					$("#map .snake,#map .food").css({
-							width: grid,
-							height: grid,
-							"border-radius" : grid/2,
-					});
 				};
 				_this.food = function () {	//随机生成食物
 					$("<div class='food'><div>").appendTo($("#map"));
-					_this.foodx = Math.floor(Math.random()*_this.map_x);
-					_this.foody = Math.floor(Math.random()*_this.map_y);
-					for (var i=0;i<_this.body.length;i++){
-						if(  (_this.foodx == _this.body[i].x) && (_this.foody == _this.body[i].y) && (_this.body.length < _this.map_x*_this.map_y-1) ) {
+					_this.foodx = Math.floor(Math.random()*_this.map_x());
+					_this.foody = Math.floor(Math.random()*_this.map_y());
+					for (var i=0;i<_this.body.length;i++){	//避免重复，重复就重新随机一个食物。
+						if(  (_this.foodx == _this.body[i].x) && (_this.foody == _this.body[i].y) && (_this.body.length < _this.map_x()*_this.map_y()-1) ) {
 							return arguments.callee();
 						}
 					}
+					var map_style = window.getComputedStyle($("#map").get(0),null);
 					$("#map .food").css({
-						top: _this.foody * grid,
-						left: _this.foodx * grid
+						top: _this.foody * _this.grid,
+						left: _this.foodx * _this.grid
 					});
 				};
 				_this.run = function () {	//运动，每次运动都是修改坐标再重新生成蛇。
@@ -173,7 +187,7 @@
 					_this.direction_pre = _this.direction;	// direction_pre记录 每次头部根据snake.direction运动方向。
 
 					//出界
-					if(_this.body[0].x > _this.map_x-1 || _this.body[0].x < 0 || _this.body[0].y > _this.map_y-1 || _this.body[0].y < 0 ){
+					if(_this.body[0].x > _this.map_x()-1 || _this.body[0].x < 0 || _this.body[0].y > _this.map_y()-1 || _this.body[0].y < 0 ){
 						alert("游戏结束1，您获得" +_this.score_num+"分，\n"+_this.gameover);
 						_this.original();
 					}
@@ -226,7 +240,7 @@
 				};
 			};
 			var snake = new Snake();
-			snake.original();
+			snake.snake_init();
 			$(document).keydown(function(e){
 				switch (e.keyCode) {
 					case 37 : 
@@ -241,11 +255,15 @@
 						snake.startOrpause();break;
 				};
 			}).click(function(e){
-				if(tow_points({x:inW*0.88,y:inH*0.5},{x:e.clientX,y:e.clientY},"s")<parseInt(inW*0.30)/2){//轮盘
-					snake.snake_dir(tow_points({x:inW*0.88,y:inH*0.5},{x:e.clientX,y:e.clientY}));
+				var roulette_center = {x:snake.inW*parseInt($(".right").get(0).style.left)/100,y:snake.inH*parseInt($(".right").get(0).style.top)/100};
+				var click_point = {x:e.clientX,y:e.clientY};
+				if(tow_points(roulette_center,click_point,"s")<$("#roulette").width()*1.3/2){//轮盘
+					snake.snake_dir(tow_points(roulette_center,click_point));
 				}else {	//外边
 					snake.startOrpause();
 				}
+				roulette_center = null;
+				click_point = null;
 			});
 			function tow_points(start,end) {	//计算{x:_,y:_}两点的方向或距离
 				if(arguments.length > 2){
@@ -260,6 +278,9 @@
 					if( end.x - start.x < 0) {return "left"};
 				}
 			};
+			$(window).resize(function(){
+				snake.snake_init();	//地图、轮盘、蛇重新初始化
+			});
 		});
 	</script>
 </head>
