@@ -188,13 +188,13 @@
 
 					//出界
 					if(_this.body[0].x > _this.map_x()-1 || _this.body[0].x < 0 || _this.body[0].y > _this.map_y()-1 || _this.body[0].y < 0 ){
-						alert("游戏结束1，您获得" +_this.score_num+"分，\n"+_this.gameover);
+						alert("游戏结束，您获得" +_this.score_num+"分，\n"+_this.gameover);
 						_this.original();
 					}
 					//吃到自己 
 					for (var j=4;j<_this.body.length;j++){
 						if(  (_this.body[0].x == _this.body[j].x) && (_this.body[0].y == _this.body[j].y)  ) {
-							alert("游戏结束2，您获得" +_this.score_num+"分，\n"+_this.gameover);
+							alert("游戏结束，您获得" +_this.score_num+"分，\n"+_this.gameover);
 							_this.original();
 						}
 					}
@@ -257,7 +257,7 @@
 			}).click(function(e){
 				var roulette_center = {x:snake.inW*parseInt($(".right").get(0).style.left)/100,y:snake.inH*parseInt($(".right").get(0).style.top)/100};
 				var click_point = {x:e.clientX,y:e.clientY};
-				if(tow_points(roulette_center,click_point,"s")<$("#roulette").width()*1.3/2){//轮盘
+				if(tow_points(roulette_center,click_point,"s")<$("#roulette").width()*1.5/2){//轮盘
 					snake.snake_dir(tow_points(roulette_center,click_point));
 				}else {	//外边
 					snake.startOrpause();
