@@ -119,9 +119,6 @@
 						marginTop: _this.shuping_flag ? -_this.grid*_this.w/2: -_this.grid*_this.h/2,
 						marginLeft: _this.shuping_flag ? -_this.grid*_this.h/2: -_this.grid*_this.w/2
 					});
-					$("#map .snake0").css({
-						transform:  _this.shuping_flag ? "rotate(90deg)": ""
-					});
 					$("#map .score").css({
 						transform: _this.shuping_flag ? "rotate(90deg)": "",
 						width: parseInt(_this.grid*3.7),
@@ -152,7 +149,7 @@
 					_this.original();
 				};
 				_this.original = function() {	//设定初始值;
-					_this.body = _this.shuping_flag ? [{x:19,y:2},{x:19,y:1},{x:19,y:0}] : [{x:2,y:0},{x:1,y:0},{x:0,y:0}];
+					_this.body = _this.shuping_flag ? [{x:_this.h-1,y:2},{x:_this.h-1,y:1},{x:_this.h-1,y:0}] : [{x:2,y:0},{x:1,y:0},{x:0,y:0}];
 					_this.direction_pre = _this.shuping_flag ? "down" : "right";	//记录上一次移动
 					_this.direction = _this.shuping_flag ? "down" : "right";	//记录上一次移动
 					clearInterval(_this.timer);
