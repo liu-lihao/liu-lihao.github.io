@@ -11,7 +11,7 @@
 			margin: 0;
 			background: #005500;
 		}
-		.center,.right {
+		.center, .right {
 			position :fixed;
 		}
 		#map {
@@ -19,23 +19,10 @@
 			background-size:100%;
 			position: relative;
 		}
-		#map .scroe {
-			display:block;
-			height:100px;
-			width: 200px;
-			position: absolute;
-			top: 50%;
-			left : 50%;
-			margin: -50px 0 0 -100px;
-			color: rgb(0,100,0);
-			cursor: default;
-			text-align:center;
-			line-height:100px;
-		}
-		#map .snake,#map .food {
+		#map .snake, #map .food {
 			background: rgb(9,145,34);
 			position: absolute;
-			z-index: 4;
+			z-index: 3;
 		}
 		#map .snake0 {
 			background: url("img/snake_header.webp");
@@ -43,6 +30,40 @@
 		}
 		#map .food {
 			background: orangered;
+		}
+		#map .score {
+			display:block;
+			position: absolute;
+			top: 50%;
+			left : 50%;
+			color: rgb(0,100,0);
+			cursor: default;
+			text-align:center;
+		}
+		#map .allscore {
+			display:block;
+			position: absolute;
+			top: 50%;
+			left : 50%;
+			background: #58A955;
+			overflow: auto;
+			text-align : center;
+			z-index: 5;
+			display: none;
+		}
+		#map .allscore h1{
+			margin: 20px 0 20px 0;
+			padding: 0;
+		}
+		#map .allscore ul, #map .allscore li{
+			margin: 0;
+			padding: 0;
+			list-style: none;
+			font-size: 16px;
+			margin: 0 0 10px 0;
+		}
+		#map .allscore li {
+			display: inline-block;
 		}
 		#roulette {
 			background: url("img/snake_roulette.png");
@@ -54,77 +75,103 @@
 		$(function(){
 			function Snake() {
 				var _this = this;
-				_this.style_copy = $("style").html();
-				_this.shuping_flag = false; //是否竖屏，竖屏的话，将内容横向。
-				_this.inW,_this.inH,_this.grid = 0;
-				_this.score_target = $("#map .scroe");	//修改特定class元素的html记录分数。
-				_this.snake_init = function(){	//地图、轮盘、蛇重新初始化
+				_this.h = 30;	//地图的高度height和宽度wide。
+				_this.w = 40;
+				_this.style_copy = $("style").html();	//copy原style
+				_this.score_target = $("#map .score");	//修改特定class元素的html记录分数。
+				_this.allscore_flag = false;	//分数记录是否显示
+				_this.resize = null;	//礼貌性的写一个。设置窗口resize事件延迟。
+				_this.map_init = function(){	//地图、轮盘、蛇重新初始化
 					_this.inW = $(window).width();
 					_this.inH = $(window).height();
-					if(_this.inW<_this.inH){_this.shuping_flag = true;}else{_this.shuping_flag = false;}
-					_this.grid = _this.shuping_flag ? parseInt(_this.inH*0.76/30) : parseInt(_this.inW*0.76/30);
-					$("style").html( _this.style_copy + "#map .snake,#map .food{width: " + _this.grid + "px;height: " + _this.grid +"px;border-radius : " +_this.grid/2+ "px}");
-					$("#map").css({
-						width : _this.shuping_flag ? parseInt(_this.inH/_this.grid*0.76*0.67)*_this.grid: parseInt(_this.inW/_this.grid*0.76)*_this.grid,
-						height : _this.shuping_flag ? parseInt(_this.inH/_this.grid*0.76)*_this.grid: parseInt(_this.inW/_this.grid*0.76*0.67)*_this.grid,
-						marginTop: _this.shuping_flag ? -parseInt(_this.inH/_this.grid*0.76)*_this.grid/2: -parseInt(_this.inW/_this.grid*0.76*0.67)*_this.grid/2,
-						marginLeft: _this.shuping_flag ? -parseInt(_this.inH/_this.grid*0.76*0.67)*_this.grid/2: -parseInt(_this.inW/_this.grid*0.76)*_this.grid/2
-					});
-					$("#map .scroe").css({
-						fontSize: _this.shuping_flag ? _this.inW/23: _this.inH/23,
-						transform: _this.shuping_flag ? "rotate(90deg)": ""
-					});
-					$("#roulette").css({
-						width: _this.shuping_flag ? parseInt(_this.inH*0.22): parseInt(_this.inW*0.22),
-						height: _this.shuping_flag ? parseInt(_this.inH*0.22): parseInt(_this.inW*0.22),
-						marginTop: _this.shuping_flag ? - parseInt(_this.inH*0.22)/2: - parseInt(_this.inW*0.22)/2,
-						marginLeft: _this.shuping_flag ? - parseInt(_this.inH*0.22)/2: - parseInt(_this.inW*0.22)/2,
-					});
+					_this.shuping_flag = _this.inW<_this.inH ? true : false;//是否竖屏，竖屏的话，将内容横向。
+					_this.map_x = _this.shuping_flag ? _this.h : _this.w;
+					_this.map_y = _this.shuping_flag ? _this.w : _this.h;
+					_this.grid = _this.shuping_flag ? //高为短边，宽为长边。如果高过窄，则格子依高/20。
+						(parseInt(_this.inH*0.76/_this.w)*_this.h > _this.inW ? parseInt(_this.inW/_this.h) : parseInt(_this.inH*0.76/_this.w)) : 
+						(parseInt(_this.inW*0.76/_this.w)*_this.h > _this.inH ? parseInt(_this.inH/_this.h) : parseInt(_this.inW*0.76/_this.w));
+					//对要生成的节点，直接设置其Style，比每次创建节点后再设置其css效率更高
+					$("style").html(`
+						${_this.style_copy}
+						#map .snake,#map .food{
+							width: ${_this.grid}px;
+							height: ${_this.grid}px;
+							border-radius: ${_this.grid/2}px;
+						}
+						#map .allscore li{
+							width: ${parseInt(_this.grid*11)}px;
+							height: ${parseInt(_this.grid*1.4)}px;
+							fontSize: ${parseInt(_this.grid*0.9)}px;
+							line-height: ${parseInt(_this.grid*1.4)}px;
+						}
+						`);
 					$(".center").css({
 						left : _this.shuping_flag ? "50%": "38%",
 						top : _this.shuping_flag ? "38%": "50%"
 					});
 					$(".right").css({
-						left : _this.shuping_flag ? "50%": "88%",
-						top : _this.shuping_flag ? "88%": "50%"
+						left : _this.shuping_flag ? "50%": "87%",
+						top : _this.shuping_flag ? "87%": "50%"
+					});
+					$("#map").css({
+						width : _this.shuping_flag ? _this.grid*_this.h: _this.grid*_this.w,
+						height : _this.shuping_flag ? _this.grid*_this.w: _this.grid*_this.h,
+						marginTop: _this.shuping_flag ? -_this.grid*_this.w/2: -_this.grid*_this.h/2,
+						marginLeft: _this.shuping_flag ? -_this.grid*_this.h/2: -_this.grid*_this.w/2
+					});
+					$("#map .snake0").css({
+						transform:  _this.shuping_flag ? "rotate(90deg)": ""
+					});
+					$("#map .score").css({
+						transform: _this.shuping_flag ? "rotate(90deg)": "",
+						width: parseInt(_this.grid*3.7),
+						height: parseInt(_this.grid*1.7),
+						fontSize : parseInt(_this.grid*1.2),
+						marginTop: -parseInt(_this.grid*2)/2,
+						marginLeft: -parseInt(_this.grid*3.7)/2,
+					});
+					$("#map .allscore").css({
+						width: parseInt(_this.grid*24),
+						height: parseInt(_this.grid*14),
+						marginTop: -parseInt(_this.grid*14)/2,
+						marginLeft: -parseInt(_this.grid*24)/2,
+						transform:  _this.shuping_flag ? "rotate(90deg)": ""
+					});
+					$("#map .allscore h1").css({
+						fontSize : parseInt(_this.grid*2),
+					});
+					$("#map .allscore ul").css({
+						marginLeft: parseInt(_this.grid*2),
+					});
+					$("#roulette").css({
+						width: parseInt(_this.grid*8.88),
+						height: parseInt(_this.grid*8.88),
+						marginTop: - parseInt(_this.grid*8.88/2),
+						marginLeft: - parseInt(_this.grid*8.88/2),
 					});
 					_this.original();
 				};
-				_this.map_x = function(){return Math.round($("#map").width()/_this.grid)};
-				_this.map_y = function(){return Math.round($("#map").height()/_this.grid)};
 				_this.original = function() {	//设定初始值;
+					_this.body = _this.shuping_flag ? [{x:19,y:2},{x:19,y:1},{x:19,y:0}] : [{x:2,y:0},{x:1,y:0},{x:0,y:0}];
+					_this.direction_pre = _this.shuping_flag ? "down" : "right";	//记录上一次移动
+					_this.direction = _this.shuping_flag ? "down" : "right";	//记录上一次移动
 					clearInterval(_this.timer);
-					_this.timer = null;
-					if(_this.shuping_flag){
-						_this.body = [
-							{x:19,y:2},
-							{x:19,y:1},
-							{x:19,y:0}
-						];
-						_this.direction = "down";
-					}else{
-						_this.body = [
-							{x:2,y:0},
-							{x:1,y:0},
-							{x:0,y:0}
-						];
-						_this.direction = "right";
-					}
-					_this.start_flag = false; 
-					_this.speed = 300;
-					_this.score_num = 3;
-					_this.direction_pre = "right";	//记录上一次移动
-					_this.gameover = "别走神，再来一波~";
-					_this.display();
-					_this.food();
-					_this.score(_this.score_num);
+					_this.timer = null;		//循环的名称
+					_this.data_time = "";	//记录游戏开始时间
+					_this.start_flag = false; //蛇是否运动中
+					_this.speed = 300;		//蛇是运动的时间间隔
+					_this.score_num = 3;	//记录分数
+					_this.gameover = "别走神，再来一波~";//游戏结束提示语
+					_this.display();//通过_this.body坐标刷新蛇
+					_this.food();//随机坐标生成食物
+					_this.score(_this.score_num);//分数同步到页面
 				};
-				_this.score = function (num) {	//计算分数
+				_this.score = function (num) {	//计算分数，若传值则设置页面为该值。若无参数，则_this.score_num+1，并设置页面。
 					if(arguments.length > 0){
 						_this.score_target.html(num);
 					}else {
 						_this.score_target.html(++_this.score_num);
-						_this.speed = Math.round(472.78*1/ Math.pow(parseInt(_this.score_target.html()),0.516));//蛇的
+						_this.speed = Math.round(472.78*1/ Math.pow(parseInt(_this.score_target.html()),0.516));//蛇的速度：刷新间隔递减函数
 						switch (parseInt(_this.score_target.html())) {
 							case 5: _this.upgrade("还没开始你就结束了？");break;
 							case 8: _this.upgrade("相信自己，你可以更持久的~");break;
@@ -160,20 +207,23 @@
 				};
 				_this.food = function () {	//随机生成食物
 					$("<div class='food'><div>").appendTo($("#map"));
-					_this.foodx = Math.floor(Math.random()*_this.map_x());
-					_this.foody = Math.floor(Math.random()*_this.map_y());
+					_this.foodx = Math.floor(Math.random()*_this.map_x);
+					_this.foody = Math.floor(Math.random()*_this.map_y);
 					for (var i=0;i<_this.body.length;i++){	//避免重复，重复就重新随机一个食物。
-						if(  (_this.foodx == _this.body[i].x) && (_this.foody == _this.body[i].y) && (_this.body.length < _this.map_x()*_this.map_y()-1) ) {
+						if(  (_this.foodx == _this.body[i].x) && (_this.foody == _this.body[i].y) && (_this.body.length < _this.map_x*_this.map_y-1) ) {
 							return arguments.callee();
 						}
 					}
-					var map_style = window.getComputedStyle($("#map").get(0),null);
 					$("#map .food").css({
 						top: _this.foody * _this.grid,
 						left: _this.foodx * _this.grid
 					});
 				};
 				_this.run = function () {	//运动，每次运动都是修改坐标再重新生成蛇。
+					if(_this.data_time == ""){
+						var time=new Date();
+						_this.data_time = units_add_zero(time.getMonth()) + "月" + units_add_zero(time.getDate()) + "日 " + units_add_zero(time.getHours()) + ":" + units_add_zero(time.getMinutes()) + ":" + units_add_zero(time.getSeconds());
+					}
 					for(var i=_this.body.length-1;i>0;i--){	//蛇的上一节身体到下一节身体的位置（蛇头另外处理）。
 						_this.body[i].x = _this.body[i-1].x;
 						_this.body[i].y = _this.body[i-1].y;
@@ -185,17 +235,14 @@
 						case "down" : _this.body[0].y +=1;break;
 					};
 					_this.direction_pre = _this.direction;	// direction_pre记录 每次头部根据snake.direction运动方向。
-
 					//出界
-					if(_this.body[0].x > _this.map_x()-1 || _this.body[0].x < 0 || _this.body[0].y > _this.map_y()-1 || _this.body[0].y < 0 ){
-						alert("游戏结束，您获得" +_this.score_num+"分，\n"+_this.gameover);
-						_this.original();
+					if(_this.body[0].x > _this.map_x-1 || _this.body[0].x < 0 || _this.body[0].y > _this.map_y-1 || _this.body[0].y < 0 ){
+						_this.end();
 					}
 					//吃到自己 
 					for (var j=4;j<_this.body.length;j++){
 						if(  (_this.body[0].x == _this.body[j].x) && (_this.body[0].y == _this.body[j].y)  ) {
-							alert("游戏结束，您获得" +_this.score_num+"分，\n"+_this.gameover);
-							_this.original();
+							_this.end();
 						}
 					}
 					//吃到食物
@@ -238,9 +285,15 @@
 						clearInterval(_this.timer);
 					}
 				};
+				_this.end = function(){
+					alert("游戏结束，您获得" +_this.score_num+"分，\n"+_this.gameover);
+					$("#map .allscore ul").html($("#map .allscore ul").html() + "<li>" + _this.data_time + "</li><li><strong>" + _this.score_num + "分</strong></li>");
+					_this.data_time = "";
+					_this.original();
+				};
 			};
 			var snake = new Snake();
-			snake.snake_init();
+			snake.map_init();
 			$(document).keydown(function(e){
 				switch (e.keyCode) {
 					case 37 : 
@@ -255,15 +308,34 @@
 						snake.startOrpause();break;
 				};
 			}).click(function(e){
-				var roulette_center = {x:snake.inW*parseInt($(".right").get(0).style.left)/100,y:snake.inH*parseInt($(".right").get(0).style.top)/100};
-				var click_point = {x:e.clientX,y:e.clientY};
-				if(tow_points(roulette_center,click_point,"s")<$("#roulette").width()*1.5/2){//轮盘
-					snake.snake_dir(tow_points(roulette_center,click_point));
-				}else {	//外边
+				if(!snake.allscore_flag){
+					var roulette_center = {x:snake.inW*parseInt($(".right").get(0).style.left)/100,y:snake.inH*parseInt($(".right").get(0).style.top)/100};
+					var click_point = {x:e.clientX,y:e.clientY};
+					if(tow_points(roulette_center,click_point,"s")<$("#roulette").width()*1.5/2){//轮盘，提高1.5倍距离，增加用户体验。
+						snake.snake_dir(tow_points(roulette_center,click_point));
+					}else {	//外边
+						snake.startOrpause();
+					}
+					roulette_center = null;
+					click_point = null;
+				}else if(e.target.className != "allscore"){
+					$("#map .allscore").fadeOut();
+					snake.allscore_flag = false;
+				}
+			});
+			$("#map .score").click(function(){
+				event.stopPropagation();
+				if(snake.start_flag){
 					snake.startOrpause();
 				}
-				roulette_center = null;
-				click_point = null;
+				snake.allscore_flag = true;
+				$("#map .allscore").fadeIn();
+			});
+			$(window).resize(function(){
+				clearTimeout(snake.resize);
+				snake.resize = setTimeout(function(){
+					snake.map_init();	//地图、轮盘、蛇重新初始化
+				},300);
 			});
 			function tow_points(start,end) {	//计算{x:_,y:_}两点的方向或距离
 				if(arguments.length > 2){
@@ -271,23 +343,26 @@
 				}
 				var k = (start.y-end.y)/(start.x-end.x);
 				if(k>1 || k<-1){
-					if( end.y - start.y > 0) {return "down"}else 
-					if( end.y - start.y < 0) {return "up"};
+					return end.y - start.y > 0 ? "down" : "up";
 				}else if(k<1 && k>-1) {
-					if( end.x - start.x > 0) {return "right"}else 
-					if( end.x - start.x < 0) {return "left"};
+					return end.x - start.x > 0 ? "right" : "left";
 				}
 			};
-			$(window).resize(function(){
-				snake.snake_init();	//地图、轮盘、蛇重新初始化
-			});
+			function units_add_zero(num){	//对齐2位数，将0-9 前面加上0，变成00,01,02...09
+				return (Math.round(num).toString().length == 1) ? ("0" + Math.round(num)) : Math.round(num);
+			}
 		});
 	</script>
 </head>
 <body>
 	<div class="center">
 		<div id="map">
-			<span class="scroe"></span>
+			<span class="score"></span>
+			<span class="allscore">
+				<h1>您的得分</h1>
+				<ul>
+				</ul>
+			</span>
 		</div>
 	</div>
 	<div class="right">
