@@ -25,7 +25,7 @@
 			z-index: 3;
 		}
 		#map .snake0 {
-			background: url("img/snake_header.webp");
+			background: rgba(9,145,34,1) url("img/snake_header.webp");
 			background-size: 100%;
 		}
 		#map .food {
@@ -81,6 +81,9 @@
 				_this.score_target = $("#map .score");	//修改特定class元素的html记录分数。
 				_this.allscore_flag = false;	//分数记录是否显示
 				_this.resize = null;	//礼貌性的写一个。设置窗口resize事件延迟。
+				_this.cookie_name = "llh_snake";
+				_this.data_cookie = getCookie(_this.cookie_name);
+				_this.data_timestamp = 0; //礼貌性的写一个。记录游戏开始的时间戳。
 				_this.map_init = function(){	//地图、轮盘、蛇重新初始化
 					_this.inW = $(window).width();
 					_this.inH = $(window).height();
@@ -99,10 +102,10 @@
 							border-radius: ${_this.grid/2}px;
 						}
 						#map .allscore li{
-							width: ${parseInt(_this.grid*11)}px;
-							height: ${parseInt(_this.grid*1.4)}px;
-							fontSize: ${parseInt(_this.grid*0.9)}px;
-							line-height: ${parseInt(_this.grid*1.4)}px;
+							width: ${parseInt(_this.grid*10)}px;
+							height: ${parseInt(_this.grid*1.3)}px;
+							font-size: ${parseInt(_this.grid*1)}px;
+							line-height: ${parseInt(_this.grid*1.3)}px;
 						}
 						`);
 					$(".center").css({
@@ -135,10 +138,10 @@
 						transform:  _this.shuping_flag ? "rotate(90deg)": ""
 					});
 					$("#map .allscore h1").css({
-						fontSize : parseInt(_this.grid*2),
+						fontSize : parseInt(_this.grid*1.8),
 					});
 					$("#map .allscore ul").css({
-						marginLeft: parseInt(_this.grid*2),
+						marginLeft: parseInt(_this.grid*0.5),
 					});
 					$("#roulette").css({
 						width: parseInt(_this.grid*8.88),
@@ -154,7 +157,7 @@
 					_this.direction = _this.shuping_flag ? "down" : "right";	//记录上一次移动
 					clearInterval(_this.timer);
 					_this.timer = null;		//循环的名称
-					_this.data_time = "";	//记录游戏开始时间
+					_this.data_timestamp = 0;	//记录游戏开始时间
 					_this.start_flag = false; //蛇是否运动中
 					_this.speed = 300;		//蛇是运动的时间间隔
 					_this.score_num = 3;	//记录分数
@@ -217,9 +220,8 @@
 					});
 				};
 				_this.run = function () {	//运动，每次运动都是修改坐标再重新生成蛇。
-					if(_this.data_time == ""){
-						var time=new Date();
-						_this.data_time = units_add_zero(time.getMonth()) + "月" + units_add_zero(time.getDate()) + "日 " + units_add_zero(time.getHours()) + ":" + units_add_zero(time.getMinutes()) + ":" + units_add_zero(time.getSeconds());
+					if(_this.data_timestamp == 0){
+						_this.data_timestamp = new Date().getTime();
 					}
 					for(var i=_this.body.length-1;i>0;i--){	//蛇的上一节身体到下一节身体的位置（蛇头另外处理）。
 						_this.body[i].x = _this.body[i-1].x;
@@ -284,13 +286,33 @@
 				};
 				_this.end = function(){
 					alert("游戏结束，您获得" +_this.score_num+"分，\n"+_this.gameover);
-					$("#map .allscore ul").html($("#map .allscore ul").html() + "<li>" + _this.data_time + "</li><li><strong>" + _this.score_num + "分</strong></li>");
-					_this.data_time = "";
+					if(_this.data_cookie.split("&").length <= 30){
+						_this.data_cookie = _this.data_cookie + _this.data_timestamp + "-" + _this.score_num + "&";
+					}else {
+						_this.data_cookie = _this.data_cookie.substring(_this.data_cookie.indexOf("&") +1) + _this.data_timestamp + "-" + _this.score_num + "&";
+					};
+						setCookie(_this.cookie_name,_this.data_cookie,7);
 					_this.original();
+				};
+				_this.loadCookie = function(){
+					if(_this.data_cookie != ""){
+						var arr_temp = _this.data_cookie.split("&");
+						arr_temp.length = arr_temp.length-1;
+						if(arr_temp.length == 30){
+							$("#map .allscore ul").html("");
+						};
+						for(let i=$("#map .allscore ul li").size()/2;i<arr_temp.length;i++){
+							let time_obj = new Date(parseInt(arr_temp[i].substring(0,13)));// 13位"-"的引索，timestamp为13位(包括毫秒)。
+							let time_cn  = units_add_zero(time_obj.getMonth()) + "月" + units_add_zero(time_obj.getDate()) + "日 " + units_add_zero(time_obj.getHours()) + ":" + units_add_zero(time_obj.getMinutes()) + ":" + units_add_zero(time_obj.getSeconds());
+							let score = arr_temp[i].substring(13+1);
+							$("#map .allscore ul").html($("#map .allscore ul").html() + "<li class='a_s'>" + time_cn + "</li><li class='a_s'><strong class='a_s'>" + score + "分</strong></li>");
+						};
+					};
 				};
 			};
 			var snake = new Snake();
 			snake.map_init();
+			// setCookie(_this.cookie_name,"",-1);
 			$(document).keydown(function(e){
 				switch (e.keyCode) {
 					case 37 : 
@@ -315,18 +337,19 @@
 					}
 					roulette_center = null;
 					click_point = null;
-				}else if(e.target.className != "allscore"){
+				}else if(e.target.className.indexOf("a_s") == -1){
 					$("#map .allscore").fadeOut();
 					snake.allscore_flag = false;
 				}
 			});
-			$("#map .score").click(function(){
-				event.stopPropagation();
+			$("#map .score").click(function(e){
+				e.stopPropagation();
 				if(snake.start_flag){
 					snake.startOrpause();
 				}
 				snake.allscore_flag = true;
 				$("#map .allscore").fadeIn();
+				snake.loadCookie();
 			});
 			$(window).resize(function(){
 				clearTimeout(snake.resize);
@@ -348,6 +371,28 @@
 			function units_add_zero(num){	//对齐2位数，将0-9 前面加上0，变成00,01,02...09
 				return (Math.round(num).toString().length == 1) ? ("0" + Math.round(num)) : Math.round(num);
 			}
+			// 设置cookie
+			function setCookie(cname, cvalue, exdays) {
+				var d = new Date();
+				d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+				var expires = "expires=" + d.toUTCString();
+				document.cookie = cname + "=" + cvalue + "; " + expires+"; path=/"   //这个很重要代表在那个层级下可以访问cookie
+			}
+			// 获取cookie
+			function getCookie(cname) {
+				var name = cname + "=";
+				var ca = document.cookie.split(';');
+				for(var i = 0; i < ca.length; i++) {
+					var c = ca[i];
+					while(c.charAt(0) == ' ') c = c.substring(1);
+					if(c.indexOf(name) != -1) return c.substring(name.length, c.length);
+				}
+				return "";
+			}
+			// 删除 cookie
+			function clearCookie(name) {
+				setCookie(name, "", -1);
+			}
 		});
 	</script>
 </head>
@@ -355,9 +400,9 @@
 	<div class="center">
 		<div id="map">
 			<span class="score"></span>
-			<span class="allscore">
-				<h1>您的得分</h1>
-				<ul>
+			<span class="allscore a_s">
+				<h1 class="a_s">您的得分</h1>
+				<ul class="a_s">
 				</ul>
 			</span>
 		</div>
