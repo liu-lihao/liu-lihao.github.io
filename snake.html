@@ -69,6 +69,9 @@
 			background: url("img/snake_roulette.png");
 			background-size: 100%;
 		}
+		* {
+			cursor : pointer;
+		}
 	</style>
 	<script src="js/jq.js" type="text/javascript" charset="utf-8"></script>
 	<script>
@@ -107,7 +110,7 @@
 							font-size: ${parseInt(_this.grid*1)}px;
 							line-height: ${parseInt(_this.grid*1.3)}px;
 						}
-						`);
+					`);
 					$(".center").css({
 						left : _this.shuping_flag ? "50%": "38%",
 						top : _this.shuping_flag ? "38%": "50%"
@@ -396,7 +399,7 @@
 		});
 	</script>
 </head>
-<body onclick="">
+<body>
 	<div class="center">
 		<div id="map">
 			<span class="score"></span>
