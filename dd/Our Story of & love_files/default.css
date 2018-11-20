@@ -1,0 +1,139 @@
+@font-face {
+	font-family: myFirstFont;
+	src: url('xdxwzxxb.ttf');
+}
+
+html {
+	overflow: hidden;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	overflow: hidden;
+	font-size: 14px;
+	font-family: '微软雅黑', '宋体', sans-serif;
+	color: #231F20;
+	overflow: auto;
+}
+
+a {
+	color: #000;
+	font-size: 14px;
+}
+
+#main {
+	width: 1100px;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	margin: -360px 0 0 -550px;
+}
+
+#wrap {
+	position: relative;
+	width: 1100px;
+	height: 680px;
+	overflow: hidden;
+}
+
+#text {
+	width: 400px;
+	height: 425;
+	pxleft: 60px;
+	top: 80px;
+	position: absolute;
+}
+
+#code {
+	display: none;
+	font-size: 16px;
+	font-weight: bold;
+	font-family: myFirstFont;
+}
+
+#clock-box {
+	position: absolute;
+	left: 60px;
+	top: 550px;
+	font-size: 28px;
+	display: none;
+}
+
+#clock-box a {
+	font-size: 28px;
+	text-decoration: none;
+}
+
+#clock {
+	margin-top: -45px;
+	margin-left: 48px;
+	text-indent: 280px;
+}
+
+#clock .digit {
+	font-size: 64px;
+}
+
+#canvas {
+	margin: 0 auto;
+	width: 1100px;
+	height: 680px;
+}
+
+#error {
+	margin: 0 auto;
+	text-align: center;
+	margin-top: 60px;
+	display: none;
+}
+
+.hand {
+	cursor: pointer;
+}
+
+.say {
+	margin-left: 5px;
+	font-family: myFirstFont;
+	color: #000;
+	font-weight: bold;
+	text-shadow: 1px 1px 1px #666;
+}
+
+.upspan {
+	text-shadow: 1px 1px 1px #000;
+	font-family: myFirstFont;
+	font-size: 30px;
+}
+
+.downspan {
+	font-family: myFirstFont;
+	font-weight: bold;
+	font-size: 35px;
+	text-shadow: 1px 1px 10px #666;
+}
+
+.space {
+	margin-right: 265px;
+}
+
+#bg1,#bg2 {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	background-size: cover;
+	background-position: 50% 50%;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+}
+#bg1 {
+	background-image: url(./1.htmlj);
+	z-index: -999998;
+}
+
+#bg2 {
+	background-image: url(./2.htmlp);
+	z-index: -999999;
+}
