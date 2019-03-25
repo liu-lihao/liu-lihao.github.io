@@ -24,9 +24,11 @@ const firstLoading = {
     this.buildDom();
     this.buildStyle();
   },
-  remove:function(){
-    document.body.removeChild(this.firstLoading);
-    document.head.removeChild(this.firstLoadingStyle);
+  remove:function(time){
+    setTimeout(()=>{
+      document.body.removeChild(this.firstLoading);
+      document.head.removeChild(this.firstLoadingStyle); 
+    },time-0);
   }
 };
 firstLoading.init();
